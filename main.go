@@ -71,8 +71,6 @@ func (c *Controller) AddComment(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "ERROR")
 		return
 	}
-
-	fmt.Fprint(w, "OK")
 }
 
 func createConnection() (controller *Controller, err error) {

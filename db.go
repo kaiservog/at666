@@ -27,7 +27,7 @@ func (dao *Dao) Close() {
 }
 
 func (dao *Dao) AddComment(text string, lat, lon float64) error {
-	stmt, err := dao.db.Prepare("INSERT INTO comment(id, place_lat, place_lon, text, comment_time) VALUES (nextval('comment_id'), $1, $2, $3, NOW());")
+	stmt, err := dao.db.Prepare("INSERT INTO comment(id, lat, lon, text, comment_time) VALUES (nextval('comment_id'), $1, $2, $3, NOW());")
 	
 	if err != nil {
 		fmt.Println(err)
@@ -45,9 +45,9 @@ func (dao *Dao) AddComment(text string, lat, lon float64) error {
 
 func (dao *Dao) GetLastsComments(quantity int, up, down, left, right *geo.Point) *Comments {
 
-	dbSelect := "SELECT id, place_lat, place_lon, comment_time, text"
+	dbSelect := "SELECT id, lat, lon, comment_time, text"
 	dbFrom := "FROM comment"
-	dbWhere := "WHERE place_lat < $2 and place_lat > $3 and place_lon > $4 and place_lon < $5 ORDER BY id DESC LIMIT $1;"
+	dbWhere := "WHERE lat <= $2 and lat >= $3 and lon >= $4 and lon <= $5 ORDER BY id DESC LIMIT $1;"
 
 	dbQuery := strings.Join([]string{dbSelect, dbFrom, dbWhere}, " ")
 
