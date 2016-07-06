@@ -24,30 +24,39 @@ func (dao *Dao) Close() {
 }
 
 func (dao *Dao) GetByName(name string) *[]Place {
-	rows, err := dao.db.Query("SELECT lat, lon, name FROM location where lower(name) = '$1' LIMIT 10", name)
+	rows, err := dao.db.Query(`SELECT lat, lon, name FROM place WHERE LOWER(name) LIKE '%' || $1 || '%' LIMIT 10`, name)
+
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
 
+	defer rows.Close()
+
 	return convertToPlaces(rows)
 }
 
 func convertToPlaces(rows *sql.Rows) *[]Place {
-	places := make([]Place, 10)
-	for rows.Next() {
-        var lat, lon float64
-       	var name string
-        err := rows.Scan(&lat, &lon, &name)
+	places := make([]Place, 0)
+	var count int
 
+	for rows.Next() {
+		var lat, lon float64
+       	var name string
+
+        err := rows.Scan(&lat, &lon, &name)
         if err != nil {
+        	fmt.Println(err)
         	continue
         }
 
-        _ = append(places, Place{lat, lon, name})
+		count = count + 1
+		place := Place{lat, lon, name}
+        places = append(places, place)
     }
 
-    return &places
+    placesSliced := places[:count]
+    return &placesSliced
 }
 
 func (dao *Dao) GetLocation(lat, lon float64, name string) *[]Place {

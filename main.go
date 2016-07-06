@@ -6,6 +6,7 @@ import (
     "fmt"
     "strconv"
     "github.com/gorilla/mux"
+    "encoding/json"
 )
 
 type Controller struct {
@@ -47,11 +48,22 @@ func (c *Controller) AddPlace(w http.ResponseWriter, r *http.Request) {
 
 func (c *Controller) FindByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	fmt.Println(vars["nameAddress"])
+	places := c.Dao.GetByName(vars["nameAddress"])
 
-	places := c.Dao.GetByName(vars["name"])
-	for _, place := range *places {
-		fmt.Fprint(w, place.Name)
+	fmt.Println(places)
+	placesResponse := &Places{places}
+
+	response, err := json.Marshal(placesResponse)
+	if err != nil {
+		fmt.Fprint(w, "ERROR")
+		return
 	}
+
+	fmt.Fprint(w, string(response))
+	//for _, place := range *places {
+	//	fmt.Fprint(w, place.Name)
+	//}
 }
 
 func FindByLocation(w http.ResponseWriter, r *http.Request) {
