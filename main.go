@@ -7,6 +7,7 @@ import (
     "strconv"
     "github.com/gorilla/mux"
     "encoding/json"
+    "github.com/kellydunn/golang-geo"
 )
 
 type Controller struct {
@@ -25,65 +26,53 @@ func Index(w http.ResponseWriter, r *http.Request) {
     fmt.Fprint(w, "Hello, to @t")
 }
 
-//to test
-//http://localhost:9002/at/place/teste/42.1/43.2
-func (c *Controller) AddPlace(w http.ResponseWriter, r *http.Request) {
+
+func (c *Controller) GetLastsComments(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	
+
 	lat, err :=  strconv.ParseFloat(vars["lat"], 64)
 	lon, err :=  strconv.ParseFloat(vars["lon"], 64)
+	qtd, err :=  strconv.Atoi(vars["qtd"])
+	
+	central := geo.NewPoint(lat, lon)
 
-	if err != nil {
-		fmt.Fprint(w, "ERROR parsing lat and lon")
-	}
+	up := central.PointAtDistanceAndBearing(0.5, 0)
+	down := central.PointAtDistanceAndBearing(0.5, 180)
+	left := central.PointAtDistanceAndBearing(0.5, 270)
+	right := central.PointAtDistanceAndBearing(0.5, 90)
 
-	err = c.Dao.AddLocation(lat, lon, vars["name"])
-	if err != nil {
+	fmt.Println("points: ", up, down, left, right)
+
+	comments := c.Dao.GetLastsComments(qtd, up, down, left, right)
+
+	if comments == nil {
 		fmt.Fprint(w, "ERROR")
 		return
 	}
 
-    fmt.Fprint(w, "OK")
-}
-
-func (c *Controller) FindByName(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	fmt.Println(vars["nameAddress"])
-	places := c.Dao.GetByName(vars["nameAddress"])
-
-	fmt.Println(places)
-	placesResponse := &Places{places}
-
-	response, err := json.Marshal(placesResponse)
+	response, err := json.Marshal(comments)
 	if err != nil {
 		fmt.Fprint(w, "ERROR")
 		return
 	}
 
 	fmt.Fprint(w, string(response))
-	//for _, place := range *places {
-	//	fmt.Fprint(w, place.Name)
-	//}
 }
 
-func FindByLocation(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) AddComment(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	lat, _ :=  strconv.ParseFloat(vars["lat"], 64)
+	lon, _ :=  strconv.ParseFloat(vars["lon"], 64)
 
-}
+	err := c.Dao.AddComment(vars["text"], lat, lon)
 
-func GetComments(w http.ResponseWriter, r *http.Request) {
+	if err != nil {
+		fmt.Println(err)
+		fmt.Fprint(w, "ERROR")
+		return
+	}
 
-}
-
-func GetCommentsAfter(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func AddInComment(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func AddOutComment(w http.ResponseWriter, r *http.Request) {
-
+	fmt.Fprint(w, "OK")
 }
 
 func createConnection() (controller *Controller, err error) {
@@ -94,7 +83,6 @@ func createConnection() (controller *Controller, err error) {
 }
 
 func main() {
-
 	controller, err := createConnection()
 
 	if err != nil {
@@ -108,19 +96,12 @@ func main() {
 	fmt.Println("Restful starting")
 
     router := mux.NewRouter().StrictSlash(true)
-    //router.Headers("Content-Type", "application/json")
     router.HandleFunc("/", Index)
-    //GET
-    router.HandleFunc("/at/find/{nameAddress}", controller.FindByName)
-    router.HandleFunc("/at/location/{lat}/{lon}", FindByLocation)
-    router.HandleFunc("/at/comments/get/{placeId}/{qtd}", GetComments)
-    router.HandleFunc("/at/comments/after/{placeId}/{time}", GetCommentsAfter)
 
+    router.HandleFunc("/at/comment/last/{lat}/{lon}/{qtd}", controller.GetLastsComments)
+    //router.HandleFunc("/at/comment/after/{lat}/{lon}/{id}/{qtd}", GetCommentsAfter)
     //PUT
-    router.HandleFunc("/at/in/comment/{place_id}", AddInComment)
-    router.HandleFunc("/at/out/comment/{place_id}", AddOutComment)
-
-    router.HandleFunc("/at/place/{name}/{lat}/{lon}", controller.AddPlace)
+    router.HandleFunc("/at/comment/{lat}/{lon}/{text}", controller.AddComment)
 
 
     log.Fatal(http.ListenAndServe(":9002", router))

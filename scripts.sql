@@ -1,7 +1,9 @@
-create table place (
-  lat  NUMERIC(14, 11) NOT NULL,
-  lon NUMERIC(14, 11) NOT NULL,
-  name VARCHAR(20) NOT NULL
+create table comment (
+  id integer PRIMARY KEY,
+  place_lat NUMERIC(14, 11) NOT NULL,
+  place_lon NUMERIC(14, 11) NOT NULL,
+  comment_time timestamp NOT NULL,
+  text VARCHAR(255) NOT NULL
 );
 
-ALTER TABLE place ADD CONSTRAINT no_duplicate_coord UNIQUE (lat, lon);
+CREATE SEQUENCE comment_id START 1000;
