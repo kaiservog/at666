@@ -76,7 +76,8 @@ func (c *Controller) AddComment(w http.ResponseWriter, r *http.Request) {
 func createConnection() (controller *Controller, err error) {
 	controller = &Controller{}
 	controller.defineDao()
-	err = controller.Dao.CreateConnection("postgres", "admin", "at")
+	err = controller.Dao.CreateConnection()
+	
 	return 
 }
 
