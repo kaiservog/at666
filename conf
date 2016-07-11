@@ -1,3 +1,5 @@
-user=postgres
-password=admin
-host=localhost
+user=qdalnwznrczphp
+password=fTjPtcDNO-aEHXnI1xdsL0d_Xs
+host=ec2-54-243-249-154.compute-1.amazonaws.com
+database=d5vtbktupb1t70
+port=5432

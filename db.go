@@ -16,8 +16,8 @@ type Dao struct {
 
 
 func (dao *Dao) CreateConnection() error {
-	user, pass, host := Params()
-	dbinfo := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", user, pass, host, "at")
+	user, pass, host, database, port := Params()
+	dbinfo := fmt.Sprintf("postgres://%s:%s@%s/%s:%s?sslmode=disable", user, pass, host, database, port)
 	fmt.Println("connection db: ", dbinfo)
 	db, err := sql.Open("postgres", dbinfo)
 	dao.db = db

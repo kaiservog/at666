@@ -7,7 +7,7 @@ import (
     "strings"
 )
 
-func Params() (user, pass, host string) {
+func Params() (user, pass, host, database, port string) {
 	file, err := os.Open("conf")
     if err != nil {
         log.Fatal(err)
@@ -27,6 +27,10 @@ func Params() (user, pass, host string) {
     			pass = value
     		case 2:
     			host = value
+    		case 3:
+    			database = value
+    		case 4:
+    			port = value
     	}
     	counter += 1
     }
