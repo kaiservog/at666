@@ -8,6 +8,7 @@ import (
     "github.com/gorilla/mux"
     "encoding/json"
     "github.com/kellydunn/golang-geo"
+    "os"
 )
 
 type Controller struct {
@@ -77,11 +78,16 @@ func createConnection() (controller *Controller, err error) {
 	controller = &Controller{}
 	controller.defineDao()
 	err = controller.Dao.CreateConnection()
-	
+
 	return 
 }
 
 func main() {
+	if os.Getenv("ATAPP_PORT") == "" {
+		fmt.Println("Please define ATAPP_PORT")
+		os.Exit(1)
+	}
+
 	controller, err := createConnection()
 
 	if err != nil {
@@ -103,6 +109,6 @@ func main() {
     router.HandleFunc("/at/comment/{lat}/{lon}/{text}", controller.AddComment)
 
 
-    log.Fatal(http.ListenAndServe(":9002", router))
+    log.Fatal(http.ListenAndServe(os.Getenv("ATAPP_PORT"), router))
 }
 
