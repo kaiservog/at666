@@ -83,11 +83,6 @@ func createConnection() (controller *Controller, err error) {
 }
 
 func main() {
-	if os.Getenv("ATAPP_PORT") == "" {
-		fmt.Println("Please define ATAPP_PORT")
-		os.Exit(1)
-	}
-
 	controller, err := createConnection()
 
 	if err != nil {
@@ -109,6 +104,6 @@ func main() {
     router.HandleFunc("/at/comment/{lat}/{lon}/{text}", controller.AddComment)
 
 
-    log.Fatal(http.ListenAndServe(os.Getenv("ATAPP_PORT"), router))
+    log.Fatal(http.ListenAndServe(os.Getenv("PORT"), router))
 }
 
