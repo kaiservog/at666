@@ -104,6 +104,6 @@ func main() {
     router.HandleFunc("/at/comment/{lat}/{lon}/{text}", controller.AddComment)
 
 
-    log.Fatal(http.ListenAndServe(os.Getenv("PORT"), router))
+    log.Fatal(http.ListenAndServe(":" + os.Getenv("PORT"), router))
 }
 
