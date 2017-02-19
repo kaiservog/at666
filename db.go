@@ -17,7 +17,8 @@ type Dao struct {
 
 func (dao *Dao) CreateConnection() error {
 	user, pass, host, database, port := Params()
-	dbinfo := fmt.Sprintf("postgres://%s:%s@%s/%s:%s?sslmode=disable", user, pass, host, database, port)
+	//dbinfo := fmt.Sprintf("postgres://%s:%s@%s/%s:%s?sslmode=disable", user, pass, host, database, port)
+	dbinfo := fmt.Sprintf("user=%s password=%s host=%s dbname=%s port=%s sslmode=disable", user, pass, host, database, port)
 	fmt.Println("connection db: ", dbinfo)
 	db, err := sql.Open("postgres", dbinfo)
 	dao.db = db
@@ -30,14 +31,14 @@ func (dao *Dao) Close() {
 
 func (dao *Dao) AddComment(text string, lat, lon float64) error {
 	stmt, err := dao.db.Prepare("INSERT INTO comment(id, lat, lon, text, comment_time) VALUES (nextval('comment_id'), $1, $2, $3, NOW());")
-	
+
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 
 	_, err = stmt.Exec(lat, lon, text)
-	
+
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -63,6 +64,33 @@ func (dao *Dao) GetLastsComments(quantity int, up, down, left, right *geo.Point)
 	return convertToComments(rows)
 }
 
+func (dao *Dao) GetLastId(up, down, left, right *geo.Point) int {
+	dbSelect := "Select max(id)"
+	dbFrom := "FROM comment"
+	dbWhere := "WHERE lat <= $1 and lat >= $2 and lon >= $3 and lon <= $4;"
+
+	dbQuery := strings.Join([]string{dbSelect, dbFrom, dbWhere}, " ")
+
+	rows, err := dao.db.Query(dbQuery, up.Lat(), down.Lat(), left.Lng(), right.Lng())
+
+	if err != nil {
+		fmt.Println(err)
+		return -1
+	}
+
+	var lastId int
+  rows.Next()
+  err = rows.Scan(&lastId)
+	fmt.Println("lastId: ", lastId)
+
+	if err != nil {
+		fmt.Println("ERROR")
+		return -1
+	}
+
+	return lastId
+}
+
 
 func convertToComments(rows *sql.Rows) *Comments {
 	comments := make([]Comment, 0)
@@ -71,15 +99,15 @@ func convertToComments(rows *sql.Rows) *Comments {
 	for rows.Next() {
 		var id int
 		var lat, lon float64
-       	var inside bool
-       	var time time.Time
-       	var text string
+  	var inside bool
+    var time time.Time
+    var text string
 
-        err := rows.Scan(&id, &lat, &lon, &time, &text)
-        if err != nil {
-        	fmt.Println(err)
-        	continue
-        }
+    err := rows.Scan(&id, &lat, &lon, &time, &text)
+    if err != nil {
+    	fmt.Println(err)
+    	continue
+    }
 
 		count = count + 1
 		comment := Comment{id, lat, lon, inside, time, text}
@@ -87,6 +115,6 @@ func convertToComments(rows *sql.Rows) *Comments {
     }
 
     commentsSliced := comments[:count]
-    
+
     return &Comments{&commentsSliced}
 }
