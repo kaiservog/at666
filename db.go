@@ -30,15 +30,15 @@ func (dao *Dao) Close() {
 	dao.db.Close()
 }
 
-func (dao *Dao) AddComment(text string, lat, lon float64) error {
-	stmt, err := dao.db.Prepare("INSERT INTO comment(id, lat, lon, text, comment_time) VALUES (nextval('comment_id'), $1, $2, $3, NOW());")
+func (dao *Dao) AddComment(nick, text string, lat, lon float64) error {
+	stmt, err := dao.db.Prepare("INSERT INTO comment(id, lat, lon, nick, text, comment_time) VALUES (nextval('comment_id'), $1, $2, $3, $4, NOW());")
 
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 
-	_, err = stmt.Exec(lat, lon, text)
+	_, err = stmt.Exec(lat, lon, nick, text)
 
 	if err != nil {
 		fmt.Println(err)
@@ -108,16 +108,17 @@ func convertToComments(rows *sql.Rows) *Comments {
 		var lat, lon float64
   	var inside bool
     var time time.Time
+		var nick string
     var text string
 
-    err := rows.Scan(&id, &lat, &lon, &time, &text)
+    err := rows.Scan(&id, &lat, &lon, &time, &nick, &text)
     if err != nil {
     	fmt.Println(err)
     	continue
     }
 
 		count = count + 1
-		comment := Comment{id, lat, lon, inside, time, text}
+		comment := Comment{id, lat, lon, inside, time, nick, text}
         comments = append(comments, comment)
     }
 

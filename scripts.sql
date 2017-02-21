@@ -9,6 +9,11 @@ create table comment (
 CREATE SEQUENCE comment_id START 1000;
 CREATE INDEX lat_lon ON comment (lat, lon);
 
+--DB version 2
+
+alter table comment add column nick VARCHAR(30) default 'anonymous';
+
+
 --http://localhost:9002/at/comment/1.0000000000/1.0000000000/estou%20aqui
 --http://localhost:9002/at/comment/1.0000000001/1.0000000001/segundo
 

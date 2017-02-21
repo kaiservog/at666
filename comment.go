@@ -8,6 +8,7 @@ type Comment struct {
 	Lon float64	`json:"lon"`
 	Inside bool `json:"inside"`
 	Time time.Time 	`json:"time"`
+	Nick string `json:"nick"`
 	Text string `json:"text"`
 }
 

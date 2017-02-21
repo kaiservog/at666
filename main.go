@@ -13,9 +13,11 @@ import (
 
 type Controller struct {
 	Dao *Dao
+	CacheManager CacheManager
 }
 
-func (c *Controller) defineDao() {
+func (c *Controller) define() {
+	//c.CacheManager = NewCacheManager()
 	c.Dao = &Dao{}
 }
 
@@ -89,7 +91,7 @@ func (c *Controller) AddComment(w http.ResponseWriter, r *http.Request) {
 	lat, _ := strconv.ParseFloat(vars["lat"], 64)
 	lon, _ := strconv.ParseFloat(vars["lon"], 64)
 
-	err := c.Dao.AddComment(vars["text"], lat, lon)
+	err := c.Dao.AddComment(vars["nick"], vars["text"], lat, lon)
 
 	if err != nil {
 		fmt.Println(err)
@@ -100,7 +102,7 @@ func (c *Controller) AddComment(w http.ResponseWriter, r *http.Request) {
 
 func createConnection() (controller *Controller, err error) {
 	controller = &Controller{}
-	controller.defineDao()
+	controller.define()
 	err = controller.Dao.CreateConnection()
 
 	return
@@ -124,9 +126,9 @@ func main() {
 
 	router.HandleFunc("/at/comment/last/{lat}/{lon}/{qtd}", controller.GetLastsComments)
 	router.HandleFunc("/at/comment/lastId/{lat}/{lon}", controller.GetLastId)
-	//router.HandleFunc("/at/comment/after/{lat}/{lon}/{id}/{qtd}", GetCommentsAfter)
+
 	//PUT
-	router.HandleFunc("/at/comment/{lat}/{lon}/{text}", controller.AddComment)
+	router.HandleFunc("/at/comment/{lat}/{lon}/{nick}/{text}", controller.AddComment)
 
 
 	fmt.Println("Server HTTP address " + os.Getenv("PORT"))
