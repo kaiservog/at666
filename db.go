@@ -22,6 +22,7 @@ func (dao *Dao) CreateConnection() error {
 	fmt.Println("connection db: ", dbinfo)
 	db, err := sql.Open("postgres", dbinfo)
 	dao.db = db
+	dao.db.SetMaxOpenConns(5)
 	return err
 }
 
@@ -43,6 +44,8 @@ func (dao *Dao) AddComment(text string, lat, lon float64) error {
 		fmt.Println(err)
 	}
 
+	defer stmt.Close()
+
 	return err
 }
 
@@ -61,6 +64,8 @@ func (dao *Dao) GetLastsComments(quantity int, up, down, left, right *geo.Point)
 		return nil
 	}
 
+	defer rows.Close()
+
 	return convertToComments(rows)
 }
 
@@ -77,6 +82,8 @@ func (dao *Dao) GetLastId(up, down, left, right *geo.Point) int {
 		fmt.Println(err)
 		return -1
 	}
+
+	defer rows.Close()
 
 	var lastId int
   rows.Next()
