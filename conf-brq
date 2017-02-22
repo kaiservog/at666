@@ -1,5 +1,5 @@
 user=postgres
 password=admin
 host=localhost
-database=atdb
+database=at
 port=5432

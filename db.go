@@ -51,7 +51,7 @@ func (dao *Dao) AddComment(nick, text string, lat, lon float64) error {
 
 func (dao *Dao) GetLastsComments(quantity int, up, down, left, right *geo.Point) *Comments {
 
-	dbSelect := "SELECT id, lat, lon, comment_time, text"
+	dbSelect := "SELECT id, lat, lon, comment_time, nick, text"
 	dbFrom := "FROM comment"
 	dbWhere := "WHERE lat <= $2 and lat >= $3 and lon >= $4 and lon <= $5 ORDER BY id DESC LIMIT $1;"
 
