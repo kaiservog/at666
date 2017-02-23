@@ -53,7 +53,7 @@ func (dao *Dao) GetLastsComments(quantity int, up, down, left, right *geo.Point)
 
 	dbSelect := "SELECT id, lat, lon, comment_time, nick, text"
 	dbFrom := "FROM comment"
-	dbWhere := "WHERE lat <= $2 and lat >= $3 and lon >= $4 and lon <= $5 ORDER BY id DESC LIMIT $1;"
+	dbWhere := "WHERE lat <= $2 and lat >= $3 and lon >= $4 and lon <= $5 ORDER BY id ASC LIMIT $1;"
 
 	dbQuery := strings.Join([]string{dbSelect, dbFrom, dbWhere}, " ")
 

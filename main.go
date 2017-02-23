@@ -68,7 +68,7 @@ func (c *Controller) GetLastsComments(w http.ResponseWriter, r *http.Request) {
 	left := central.PointAtDistanceAndBearing(0.5, 270)
 	right := central.PointAtDistanceAndBearing(0.5, 90)
 
-	fmt.Println("points: ", up, down, left, right)
+	//fmt.Println("points: ", up, down, left, right)
 
 	comments := c.Dao.GetLastsComments(qtd, up, down, left, right)
 
