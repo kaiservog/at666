@@ -61,6 +61,9 @@ func (dao *Dao) GetLastsComments(quantity int, up, down, left, right *geo.Point)
 
 	if err != nil {
 		fmt.Println(err)
+		dao.db.Prepare("alter table comment add column nick VARCHAR(30) default 'anonymous';")
+		_, err = stmt.Exec()
+		fmt.Println(err)
 		return nil
 	}
 
