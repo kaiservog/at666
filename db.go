@@ -53,16 +53,13 @@ func (dao *Dao) GetLastsComments(quantity int, up, down, left, right *geo.Point)
 
 	dbSelect := "SELECT id, lat, lon, comment_time, nick, text"
 	dbFrom := "FROM comment"
-	dbWhere := "WHERE lat <= $2 and lat >= $3 and lon >= $4 and lon <= $5 ORDER BY id ASC LIMIT $1;"
+	dbWhere := "WHERE lat <= $2 and lat >= $3 and lon >= $4 and lon <= $5 ORDER BY id DESC LIMIT $1;"
 
 	dbQuery := strings.Join([]string{dbSelect, dbFrom, dbWhere}, " ")
 
 	rows, err := dao.db.Query(dbQuery, quantity, up.Lat(), down.Lat(), left.Lng(), right.Lng())
 
 	if err != nil {
-		fmt.Println(err)
-		stmt, err := dao.db.Prepare("alter table comment add column nick VARCHAR(30) default 'anonymous';")
-		_, err = stmt.Exec()
 		fmt.Println(err)
 		return nil
 	}
@@ -124,6 +121,10 @@ func convertToComments(rows *sql.Rows) *Comments {
 		comment := Comment{id, lat, lon, inside, time, nick, text}
         comments = append(comments, comment)
     }
+
+		for i, j := 0, len(comments)-1; i < j; i, j = i+1, j-1 {
+			 comments[i], comments[j] = comments[j], comments[i]
+	 }
 
     commentsSliced := comments[:count]
 
