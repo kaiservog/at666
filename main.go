@@ -64,12 +64,13 @@ func (c *Controller) GetLastId(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	lat, lon, err := c.getLatLon(w, r)
-	nick := vars["nick"]
 
 	if err != nil {
-		fmt.Fprint(w, "ERROR")
+		http.Error(w, "Server error", 500)
 		return
 	}
+
+	nick := vars["nick"]
 
 	central := geo.NewPoint(lat, lon)
 
@@ -93,6 +94,11 @@ func (c *Controller) GetLastsComments(w http.ResponseWriter, r *http.Request) {
 	lon, err := strconv.ParseFloat(vars["lon"], 64)
 	qtd, err := strconv.Atoi(vars["qtd"])
 
+	if err != nil {
+		http.Error(w, "Server error", 500)
+		return
+	}
+
 	central := geo.NewPoint(lat, lon)
 
 	up := central.PointAtDistanceAndBearing(0.5, 0)
@@ -103,14 +109,14 @@ func (c *Controller) GetLastsComments(w http.ResponseWriter, r *http.Request) {
 	comments := c.Dao.GetLastsComments(qtd, up, down, left, right)
 
 	if comments == nil {
-		fmt.Fprint(w, "ERROR")
+		http.Error(w, "Server error", 500)
 		return
 	}
 
 	response, err := json.Marshal(comments)
 	if err != nil {
-		fmt.Fprint(w, "ERROR")
-		return
+			http.Error(w, "Server error marshal json", 500)
+			return
 	}
 
 	fmt.Fprint(w, string(response))
@@ -126,11 +132,11 @@ func (c *Controller) AddComment(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		fmt.Println(err)
-		fmt.Fprint(w, "ERROR")
+		http.Error(w, "Server error", 500)
 		return
 	}
 
-	fmt.Println("lat", lat, "lon", lon, "nick", nick, "text", text, "error", err)
+	fmt.Println("comment data lat", lat, "lon", lon, "nick", nick, "text", text, "error", err)
 }
 
 func createConnection() (controller *Controller, err error) {
