@@ -117,17 +117,20 @@ func (c *Controller) GetLastsComments(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) AddComment(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	lat, _ := strconv.ParseFloat(vars["lat"], 64)
-	lon, _ := strconv.ParseFloat(vars["lon"], 64)
+	lat, _ := strconv.ParseFloat(r.FormValue("lat"), 64)
+	lon, _ := strconv.ParseFloat(r.FormValue("lon"), 64)
+	nick := r.FormValue("nick")
+	text := r.FormValue("text")
 
-	err := c.Dao.AddComment(vars["nick"], vars["text"], lat, lon)
+	err := c.Dao.AddComment(nick, text, lat, lon)
 
 	if err != nil {
 		fmt.Println(err)
 		fmt.Fprint(w, "ERROR")
 		return
 	}
+
+	fmt.Println("lat", lat, "lon", lon, "nick", nick, "text", text, "error", err)
 }
 
 func createConnection() (controller *Controller, err error) {
@@ -159,8 +162,8 @@ func main() {
 	router.HandleFunc("/at/people/{lat}/{lon}", controller.GetPeople)
 
 	//PUT
-	router.HandleFunc("/at/comment/{lat}/{lon}/{nick}/{text}", controller.AddComment)
-
+	//router.HandleFunc("/at/comment/{lat}/{lon}/{nick}/{text}", controller.AddComment).Methods("PUT")
+	router.HandleFunc("/at/comment", controller.AddComment).Methods("PUT")
 
 	fmt.Println("Server HTTP address " + os.Getenv("PORT"))
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router))
