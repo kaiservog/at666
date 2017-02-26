@@ -9,16 +9,20 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 type Controller struct {
 	Dao *Dao
-	CacheManager CacheManager
+	PeopleManager *PeopleManager
 }
 
 func (c *Controller) define() {
-	//c.CacheManager = NewCacheManager()
+	c.PeopleManager = &PeopleManager{}
+	c.PeopleManager.People = make([]People, 0, 0)
 	c.Dao = &Dao{}
+	c.PeopleManager.Clean(15 * time.Second)
+	fmt.Println("End Controller define")
 }
 
 func (c *Controller) close() {
@@ -29,11 +33,38 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Hello, to @tserver")
 }
 
-func (c *Controller) GetLastId(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) getLatLon(w http.ResponseWriter, r *http.Request) (float64, float64, error) {
 	vars := mux.Vars(r)
 
 	lat, err := strconv.ParseFloat(vars["lat"], 64)
+	if(err != nil) {
+		return 0, 0, err
+	}
 	lon, err := strconv.ParseFloat(vars["lon"], 64)
+	if(err != nil) {
+		return 0, 0, err
+	}
+
+	return lat, lon, nil
+}
+
+func (c *Controller) GetPeople(w http.ResponseWriter, r *http.Request) {
+	lat, lon, err := c.getLatLon(w, r)
+
+	if err != nil {
+		fmt.Fprint(w, "ERROR")
+		return
+	}
+
+	quantity := c.PeopleManager.SumPeopleInArea(lat, lon)
+	fmt.Fprint(w, "{quantity : " + strconv.Itoa(quantity) + "}")
+}
+
+func (c *Controller) GetLastId(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	lat, lon, err := c.getLatLon(w, r)
+	nick := vars["nick"]
 
 	if err != nil {
 		fmt.Fprint(w, "ERROR")
@@ -47,9 +78,10 @@ func (c *Controller) GetLastId(w http.ResponseWriter, r *http.Request) {
 	left := central.PointAtDistanceAndBearing(0.5, 270)
 	right := central.PointAtDistanceAndBearing(0.5, 90)
 
-	fmt.Println("points: ", up, down, left, right)
-
 	lastId := c.Dao.GetLastId(up, down, left, right)
+
+	people := &People{lat, lon, nick, time.Now()}
+	c.PeopleManager.PutIfNeeded(people)
 
 	fmt.Fprint(w, "{lastId : " + strconv.Itoa(lastId) + "}")
 }
@@ -67,8 +99,6 @@ func (c *Controller) GetLastsComments(w http.ResponseWriter, r *http.Request) {
 	down := central.PointAtDistanceAndBearing(0.5, 180)
 	left := central.PointAtDistanceAndBearing(0.5, 270)
 	right := central.PointAtDistanceAndBearing(0.5, 90)
-
-	//fmt.Println("points: ", up, down, left, right)
 
 	comments := c.Dao.GetLastsComments(qtd, up, down, left, right)
 
@@ -125,7 +155,8 @@ func main() {
 	router.HandleFunc("/", Index)
 
 	router.HandleFunc("/at/comment/last/{lat}/{lon}/{qtd}", controller.GetLastsComments)
-	router.HandleFunc("/at/comment/lastId/{lat}/{lon}", controller.GetLastId)
+	router.HandleFunc("/at/comment/lastId/{lat}/{lon}/{nick}", controller.GetLastId)
+	router.HandleFunc("/at/people/{lat}/{lon}", controller.GetPeople)
 
 	//PUT
 	router.HandleFunc("/at/comment/{lat}/{lon}/{nick}/{text}", controller.AddComment)
