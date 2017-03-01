@@ -58,6 +58,7 @@ func (c *Controller) getLatLon(w http.ResponseWriter, r *http.Request) (float64,
 }
 
 func (c *Controller) GetPeople(w http.ResponseWriter, r *http.Request) {
+  fmt.Println("People get called")
 	lat, lon, err := c.getLatLon(w, r)
 
 	if err != nil {
@@ -67,6 +68,7 @@ func (c *Controller) GetPeople(w http.ResponseWriter, r *http.Request) {
 
   quantity := c.PeopleRecover.GetPeopleInArea(NewCoordinate(lat, lon), c.People, IsCoordinateInside)
 
+  fmt.Println("Returning quantity: ", quantity, "size list", len(c.People))
 	fmt.Fprint(w, "{quantity : " + strconv.Itoa(quantity) + "}")
 }
 
@@ -87,6 +89,7 @@ func (c *Controller) GetLastId(w http.ResponseWriter, r *http.Request) {
 
 
 func (c *Controller) GetLastsComments(w http.ResponseWriter, r *http.Request) {
+  fmt.Println("Get lasts comments")
 	vars := mux.Vars(r)
 	lat, err := strconv.ParseFloat(vars["lat"], 64)
 
@@ -128,7 +131,7 @@ func (c *Controller) GetLastsComments(w http.ResponseWriter, r *http.Request) {
 
 
 func (c *Controller) AddComment(w http.ResponseWriter, r *http.Request) {
-
+fmt.Println("Add comment called")
 	lat, _ := strconv.ParseFloat(r.FormValue("lat"), 64)
 	lon, _ := strconv.ParseFloat(r.FormValue("lon"), 64)
 	nick := r.FormValue("nick")
@@ -146,6 +149,7 @@ func (c *Controller) AddComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) PutPeople(w http.ResponseWriter, r *http.Request) {
+  fmt.Println("People put called")
   lat, err := strconv.ParseFloat(r.FormValue("lat"), 64)
   if err != nil {
     http.Error(w, err.Error(), 500)
@@ -168,4 +172,5 @@ func (c *Controller) PutPeople(w http.ResponseWriter, r *http.Request) {
   delay := time.Now()
   coordinate := NewCoordinate(lat, lon)
   c.People = c.PeopleRegister.PutIfNeeded(&Person{coordinate, nick, delay}, c.People)
+  fmt.Println("Put ended size", len(c.People))
 }
