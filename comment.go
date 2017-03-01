@@ -12,6 +12,10 @@ type Comment struct {
 	Text string `json:"text"`
 }
 
+func (c *Comment) GetCoordinate() *Coordinate {
+	return NewCoordinate(c.Lat, c.Lon)
+}
+
 type Comments struct {
 	Comments 	*[]Comment `json:"comments"`
 }

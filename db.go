@@ -6,16 +6,20 @@ import (
 	"fmt"
 	"time"
 	"strings"
-	"github.com/kellydunn/golang-geo"
 )
 
 type Dao struct {
 	db *sql.DB
 }
 
+func NewDao() (*Dao, error) {
+	dao := &Dao{}
+	err := dao.createConnection()
 
+	return dao, err
+}
 
-func (dao *Dao) CreateConnection() error {
+func (dao *Dao) createConnection() error {
 	user, pass, host, database, port := Params()
 	//dbinfo := fmt.Sprintf("postgres://%s:%s@%s/%s:%s?sslmode=disable", user, pass, host, database, port)
 	dbinfo := fmt.Sprintf("user=%s password=%s host=%s dbname=%s port=%s sslmode=disable", user, pass, host, database, port)
@@ -23,6 +27,11 @@ func (dao *Dao) CreateConnection() error {
 	db, err := sql.Open("postgres", dbinfo)
 	dao.db = db
 	dao.db.SetMaxOpenConns(5)
+
+	if err != nil {
+		fmt.Println("DB connected")
+	}
+
 	return err
 }
 
@@ -49,7 +58,7 @@ func (dao *Dao) AddComment(nick, text string, lat, lon float64) error {
 	return err
 }
 
-func (dao *Dao) GetLastsComments(quantity int, up, down, left, right *geo.Point) *Comments {
+func (dao *Dao) GetLastsComments(quantity int, up, down, left, right float64) (*Comments, error) {
 
 	dbSelect := "SELECT id, lat, lon, comment_time, nick, text"
 	dbFrom := "FROM comment"
@@ -57,26 +66,25 @@ func (dao *Dao) GetLastsComments(quantity int, up, down, left, right *geo.Point)
 
 	dbQuery := strings.Join([]string{dbSelect, dbFrom, dbWhere}, " ")
 
-	rows, err := dao.db.Query(dbQuery, quantity, up.Lat(), down.Lat(), left.Lng(), right.Lng())
+	rows, err := dao.db.Query(dbQuery, quantity, up, down, left, right)
 
 	if err != nil {
-		fmt.Println(err)
-		return nil
+		return nil, err
 	}
 
 	defer rows.Close()
 
-	return convertToComments(rows)
+	return convertToComments(rows), nil
 }
 
-func (dao *Dao) GetLastId(up, down, left, right *geo.Point) int {
+func (dao *Dao) GetLastId(up, down, left, right float64) int {
 	dbSelect := "Select max(id)"
 	dbFrom := "FROM comment"
 	dbWhere := "WHERE lat <= $1 and lat >= $2 and lon >= $3 and lon <= $4;"
 
 	dbQuery := strings.Join([]string{dbSelect, dbFrom, dbWhere}, " ")
 
-	rows, err := dao.db.Query(dbQuery, up.Lat(), down.Lat(), left.Lng(), right.Lng())
+	rows, err := dao.db.Query(dbQuery, up, down, left, right)
 
 	if err != nil {
 		fmt.Println(err)
